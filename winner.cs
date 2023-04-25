@@ -16,6 +16,52 @@ interface IPlayer
     int SuitScore { get; set; }
     int Score { get; set; }
 }
+
+class Card : ICard
+{
+    public int Suit { get; set; }
+    public int Value { get; set; }
+    public Card(string cardString)
+    {
+        string valueString = cardString.Substring(0, cardString.Length - 1);
+        string suitString = cardString.Substring(cardString.Length - 1);
+
+        switch (valueString.ToUpper())
+        {
+            case "A": Value = 11; break;
+            case "J": Value = 11; break;
+            case "Q": Value = 12; break;
+            case "K": Value = 13; break;
+            default: Value = int.Parse(valueString); break;
+        }
+
+        switch (suitString.ToUpper())
+        {
+            case "C": Suit = 1; break;
+            case "D": Suit = 2; break;
+            case "H": Suit = 3; break;
+            case "S": Suit = 4; break;
+            default: throw new ArgumentException("Invalid card suit.");
+        }
+    }
+}
+
+class Player : IPlayer
+{
+    public string Name { get; set; }
+    public ICard[] Cards { get; set; }
+    public int SuitScore { get; set; }
+    public int Score { get; set; }
+
+    public Player(string name, ICard[] cards)
+    {
+        Name = name;
+        Cards = cards;
+        SuitScore = cards.Aggregate(1, (acc, c) => acc * c.Suit);
+        Score = cards.Sum(c => c.Value);
+    }
+}
+
 class Program
 {
     static void Main(string[] args)
@@ -46,14 +92,26 @@ class Program
         {
             // Read the input file
             string[] inputLines = File.ReadAllLines(inputFileName);
-
-            // Parse the input and calculate the scores
+            //checks if The input file must contain exactly 5 players
+            if(inputLines.Length !=5)
+            {
+                Console.WriteLine("Error: Invalid input file. The input file must contain exactly 5 lines.");
+                  return;
+            }
+            
             List<IPlayer> players = new List<IPlayer>();
             foreach (string line in inputLines)
             {
                 string[] parts = line.Split(':');
                 string playerName = parts[0].Trim();
                 string[] cardStrings = parts[1].Split(',');
+                
+        // checks that each line in the input file contains exactly 5 cards before creating a new Player object
+                 if (cardStrings.Length != 5)
+                  {
+                   Console.WriteLine(playerName+" does not have exactly 5 cards.");
+                    return;
+                  }
                 ICard[] cards = cardStrings.Select(s => (ICard)new Card(s.Trim())).ToArray();
                 IPlayer player = new Player(playerName, cards);
                 players.Add(player);
@@ -100,47 +158,4 @@ class Program
     }
 }
 
-class Card : ICard
-{
-    public int Suit { get; set; }
-    public int Value { get; set; }
-    public Card(string cardString)
-    {
-        string valueString = cardString.Substring(0, cardString.Length - 1);
-        string suitString = cardString.Substring(cardString.Length - 1);
 
-        switch (valueString.ToUpper())
-        {
-            case "A": Value = 11; break;
-            case "J": Value = 11; break;
-            case "Q": Value = 12; break;
-            case "K": Value = 13; break;
-            default: Value = int.Parse(valueString); break;
-        }
-
-        switch (suitString.ToUpper())
-        {
-            case "C": Suit = 1; break;
-            case "D": Suit = 2; break;
-            case "H": Suit = 3; break;
-            case "S": Suit = 4; break;
-            default: throw new ArgumentException("Invalid card suit.");
-        }
-    }
-}
-
-class Player : IPlayer
-{
-    public string Name { get; set; }
-    public ICard[] Cards { get; set; }
-    public int SuitScore { get; set; }
-    public int Score { get; set; }
-
-    public Player(string name, ICard[] cards)
-    {
-        Name = name;
-        Cards = cards;
-        SuitScore = cards.Aggregate(1, (acc, c) => acc * c.Suit);
-        Score = cards.Sum(c => c.Value);
-    }
-}
